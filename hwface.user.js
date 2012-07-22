@@ -280,6 +280,20 @@ withjQuery(function($)
 		obj.find("span.fires_icon[lock=0]").fadeTo("fast",0.4);
 	}
 	
+	function local_sort(obj)
+	{
+		$("div#sort_msg").html("本地排行功能暂时未开放");
+		$("div#sort_msg").show();
+		$("div#sort_msg").fadeOut(3000);
+	}
+	
+	function net_sort(obj)
+	{
+		$("div#sort_msg").html("网络榜单功能暂时未开放");
+		$("div#sort_msg").show();
+		$("div#sort_msg").fadeOut(3000);
+	}
+	
 	$("span.pr20 a").each(function(){getPic($(this));});
 	$("td.del").click(function(){objToggle($(this))});
 	//$("span.pr20 a").onclick(function(){objToggle($("td.del"));});
@@ -287,4 +301,15 @@ withjQuery(function($)
 	$("td.del").mouseout(function(){clearFiv($(this))});
 	$("span.fires_icon").mouseover(function(){giveFive($(this), 0);});
 	$("span.fires_icon").click(function(){giveFive($(this), 1);});
+	
+	//score board
+	var org_button=$("input[value='发表新帖']");
+	var local_sort_str="&nbsp;<input id='local_sort' class='text_button mt5' type='button' value='本地排行'>&nbsp;";
+	org_button.after(local_sort_str);
+	var net_sort_str="&nbsp;<input id='net_sort' class='text_button mt5' type='button' value='网络榜单'>&nbsp;";
+	net_sort_str = net_sort_str + "<div id='sort_msg' style='display: none;'></div>";
+	$("input#local_sort").after(net_sort_str);
+	$("input#local_sort").click(function(){local_sort($(this));});
+	$("input#net_sort").click(function(){net_sort($(this));});
+	
 }, true);
