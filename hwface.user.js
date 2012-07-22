@@ -87,7 +87,13 @@ function withjQuery(callback, safe){
 }
 withjQuery(function($)
 {
-	var vote_url = "http://hwface.sinaapp.com/vote.php";
+	var vote_url = "http://hwface.sinaapp.com/vote.php";	
+	var giveFiveStr = "<span class=\"fires_icon\" cent=1 lock=0 title=\"一般一般\" style=\"opacity: 0.4; \">&nbsp;</span>" +
+					"<span class=\"fires_icon\" cent=2 lock=0 title=\"可以可以\" style=\"opacity: 0.4; \">&nbsp;</span>" +
+					"<span class=\"fires_icon\" cent=3 lock=0 title=\"不错不错\" style=\"opacity: 0.4; \">&nbsp;</span>" +
+					"<span class=\"fires_icon\" cent=4 lock=0 title=\"来电咯\" style=\"opacity: 0.4; \">&nbsp;</span>" +
+					"<span class=\"fires_icon\" cent=5 lock=0 title=\"女神下凡\" style=\"opacity: 0.4; \">&nbsp;</span>" +
+					"<a id=\"votemsg\"></a><div id='content' style='display: none;'><div id='url'>#url#</div></div>";
 	var hwface = unSerialize(getCookie("hwface"));
 	
 	function setCookie(c_name,value,expiredays)
@@ -156,13 +162,8 @@ withjQuery(function($)
 		}
 		var url = obj.attr("href");
 		obj.attr("ajax", "0");
-		var giveFive = "<span class=\"fires_icon\" cent=1 lock=0 title=\"一般一般\" style=\"opacity: 0.4; \">&nbsp;</span>" +
-						"<span class=\"fires_icon\" cent=2 lock=0 title=\"可以可以\" style=\"opacity: 0.4; \">&nbsp;</span>" +
-						"<span class=\"fires_icon\" cent=3 lock=0 title=\"不错不错\" style=\"opacity: 0.4; \">&nbsp;</span>" +
-						"<span class=\"fires_icon\" cent=4 lock=0 title=\"来电咯\" style=\"opacity: 0.4; \">&nbsp;</span>" +
-						"<span class=\"fires_icon\" cent=5 lock=0 title=\"女神下凡\" style=\"opacity: 0.4; \">&nbsp;</span>" +
-						"<a id=\"votemsg\"></a>";
-		obj.append(giveFive+"<div id='content'><div id='url'>"+url+"</div></div>");
+		temp_str = giveFiveStr.replace(/#url#/, url);
+		obj.append(temp_str);
 		obj.parent("span.pr20").find("div#content").hide();
 		//防止对服务器造成过大的并发，不一次性请求所有数据，在objToggle里面点一次，请求一个。
 		//$.ajax({ url:url, success: function(msg){getPicContent(obj, msg)}});
@@ -192,6 +193,7 @@ withjQuery(function($)
 	function showLastResult(obj, cent)
 	{
 		var temp_obj;
+		var i = 0;
 		if (cent < 0 && cent > 5)
 		{
 			return ;
@@ -251,6 +253,7 @@ withjQuery(function($)
 	{
 		var temp_obj;
 		var vote = 0;
+		var i = 0;
 		for (i = 1; i <= 5; i++)
 		{
 			temp_obj = obj.parent("span.pr20 a").find("span.fires_icon[cent="+i+"]");
@@ -291,11 +294,43 @@ withjQuery(function($)
 		obj.find("span.fires_icon[lock=0]").fadeTo("fast",0.4);
 	}
 	
+	function showSortTable(obj)
+	{
+		var table_obj = $("table.ta_list").find("tr").first();
+		var i = 0;
+		var j = 0;
+		for (i = 5, j = 0; i >= 1; i--)
+		{
+			for (uid in obj)
+			{
+				if (obj[uid] != i){continue;}
+				var tr_temp = table_obj.clone();
+				$(tr_temp).attr("class", (j%2)?"list_bm":"list_bm no_bg");
+				var tempa = $(tr_temp).find("td.del span.pr20 a[ajax]");
+				tempa.html("score for "+uid);
+				tempa.attr("uid", uid);
+				tempa.attr("ajax", 0);
+				temp_url = "http://xinsheng.huawei.com/cn/index.php?app=forum&mod=Detail&act=index&id=" + uid;
+				temp_str = giveFiveStr.replace(/#url#/, temp_url);
+				tempa.append(temp_str);
+				
+				showLastResult($(tr_temp).find("td.del a[ajax] span.fires_icon").first(), obj[uid]);
+				$(tr_temp).find("td.del").click(function(){objToggle($(this))});
+				$(tr_temp).find("td[align='center'][style]").html("Top "+ (j+1));
+				$(tr_temp).find("td.del_name").html("hwface");
+				$(tr_temp).find("td[align='right'][style]").html("");
+				table_obj.before(tr_temp);
+				j++;
+			}
+		}
+	}
+	
 	function local_sort(obj)
 	{
-		$("div#sort_msg").html("本地排行功能暂时未开放");
-		$("div#sort_msg").show();
-		$("div#sort_msg").fadeOut(3000);
+		//$("div#sort_msg").html("本地排行功能暂时未开放");
+		//$("div#sort_msg").show();
+		//$("div#sort_msg").fadeOut(3000);
+		showSortTable(hwface);
 	}
 	
 	function net_sort(obj)
@@ -307,8 +342,6 @@ withjQuery(function($)
 	
 	$("span.pr20 a").each(function(){getPic($(this));});
 	$("td.del").click(function(){objToggle($(this))});
-	//$("span.pr20 a").onclick(function(){objToggle($("td.del"));});
-	//$("span.fires_icon").css("opacity", 0.4);
 	$("td.del").mouseout(function(){clearFiv($(this))});
 	$("span.fires_icon").mouseover(function(){giveFive($(this), 0);});
 	$("span.fires_icon").click(function(){giveFive($(this), 1);});
