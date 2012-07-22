@@ -34,6 +34,14 @@
 // @namespace    http://hwface.sinaapp.com/
 // @namespace	 https://github.com/w000cn/hwface
 // @description  A javascript snippet to help you auto get huawei face mash
+//               插件功能点：
+//               1.浏览易用性，不用点击链接进入页面，能够在一个窗口中浏览所有
+//                 内容，删除了超链接。
+//               2.打分功能：可以针对所有内容进行打分操作。能够将打分结果上传
+//                 到互联网服务器进行统计排行，输出平均分。
+//               3.打分记忆功能，能够记录本机所有的打分操作记录。
+//               4.互联网排行功能：针对打分结果，输出所有排行内容（内测中）
+//               5.本地排行功能：针对本地的打分结果，输出所有排行内容（规划中）
 // @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=409&cate=44*
 // @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=466&cate=52*
 // @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=467&cate=58*
