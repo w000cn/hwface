@@ -88,6 +88,7 @@ function withjQuery(callback, safe){
 withjQuery(function($)
 {
 	var vote_url = "http://hwface.sinaapp.com/vote.php";
+	var hwface = unSerialize(getCookie("hwface"));
 	
 	function setCookie(c_name,value,expiredays)
 	{
@@ -114,6 +115,14 @@ withjQuery(function($)
 			} 
 		 }
 		return ""
+	}
+	
+	function unSerialize(str)
+	{
+		var cookie_str = decodeURIComponent(str);
+		cookie_str = cookie_str.replace(/=/g,":");
+		cookie_str = cookie_str.replace(/&/g,",");
+		return eval("tempobj={"+cookie_str+"}");
 	}
 	
 	function getPicContent(obj, msg)
@@ -165,8 +174,8 @@ withjQuery(function($)
 		if (uid)
 		{
 			obj.attr("uid", uid);
-			var cent = getCookie("vote"+uid);
-			if (cent && cent.length > 0)
+			var cent = hwface[uid];
+			if (cent)
 			{
 				showLastResult(obj.find("span.fires_icon"), cent);
 			}
@@ -261,7 +270,9 @@ withjQuery(function($)
 			{
 				if (obj.parent("span.pr20 a") && obj.parent("span.pr20 a").attr("uid"))
 				{
-					setCookie("vote"+obj.parent("span.pr20 a").attr("uid"), obj.attr("cent"));
+					var uid = obj.parent("span.pr20 a").attr("uid");
+					hwface[uid] = obj.attr("cent");					
+					setCookie("hwface", $.param(hwface, false));//
 				}
 				vote_to_server(obj);
 				//vote_msg(temp_obj, "感谢投票");
