@@ -32,6 +32,7 @@
 // @author       w000.cn@gmail.com
 // @namespace    http://www.hwface.com/
 // @namespace    http://hwface.sinaapp.com/
+// @namespace	 https://github.com/w000cn/hwface
 // @description  A javascript snippet to help you auto get huawei face mash
 // @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=409&cate=44*
 // @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=466&cate=52*
