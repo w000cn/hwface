@@ -47,13 +47,13 @@
 // @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=467&cate=58*
 // @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=468&cate=64*
 // @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=469&cate=70*
-// @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=470&cate=76
-// @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=506&cate=82
-// @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=507&cate=88
-// @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=508&cate=94
-// @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=509&cate=100
-// @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=510&cate=112
-// @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=511&cate=106
+// @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=470&cate=76*
+// @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=506&cate=82*
+// @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=507&cate=88*
+// @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=508&cate=94*
+// @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=509&cate=100*
+// @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=510&cate=112*
+// @include      *://xinsheng.huawei.com/cn/index.php?app=forum&mod=List&act=index&class=511&cate=106*
 
 // ==/UserScript== 
 function withjQuery(callback, safe){
@@ -296,6 +296,7 @@ withjQuery(function($)
 	
 	function showSortTable(obj)
 	{
+		$("table.ta_list").find("tr[sort]").remove();
 		var table_obj = $("table.ta_list").find("tr").first();
 		var i = 0;
 		var j = 0;
@@ -319,6 +320,7 @@ withjQuery(function($)
 				$(tr_temp).find("td[align='center'][style]").html("Top "+ (j+1));
 				$(tr_temp).find("td.del_name").html("hwface");
 				$(tr_temp).find("td[align='right'][style]").html("");
+				$(tr_temp).attr("sort", 1);
 				table_obj.before(tr_temp);
 				j++;
 			}
