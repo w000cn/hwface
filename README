@@ -1,0 +1,34 @@
+行政之窗插件
+
+这个帖子为什么要删除？防止帖子删除，请保存网页内文本内容。
+
+准备工作
+1.下载安装360 chrome浏览器或google  chrome浏览器
+360chrome浏览器下载地址：http://chrome.360.cn/ 
+Google Chrome 浏览器下载地址：http://www.google.cn/chrome/intl/zh-CN/landing_chrome.html?hl=zh-CN 
+公司内下载镜像：\\hwrnd-fs\szx01\CRDU_RTOOLS_F\RD_Tools\Application\Webpage_Browse\chrome 13.0.782.112
+
+2.下载插件
+github镜像 ：https://github.com/w000cn/hwface/raw/master/hwface.user.js
+
+3.安装插件：
+打开chrome浏览器后，将下载好的hwface.user.js拖放到chrome浏览器中确认安装即可。
+
+插件功能点：
+1.浏览易用性，不用点击链接进入页面，能够在一个窗口中浏览所有
+  内容，删除了超链接。
+2.打分功能：可以针对所有内容进行打分操作。能够将打分结果上传
+  到互联网服务器进行统计排行，输出平均分。
+3.打分记忆功能，能够记录本机所有的打分操作记录。
+4.互联网排行功能：针对打分结果，输出所有排行内容（内测中）
+5.本地排行功能：针对本地的打分结果，输出所有排行内容（规划中）
+
+使用方法：
+使用chrome浏览器打开行政之窗-征婚信息板块，插件自动加载。截图昨天上传被版主删除了，我就不上传了。
+
+其他说明：
+1.由于插件中调用了微软的jquery， 所以请确保能够访问互联网或 已经配置openproxy或proxycn2
+2.该插件仅供学习、参考之用，请在工作外时间使用。
+
+
+
