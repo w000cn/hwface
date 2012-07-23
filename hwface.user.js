@@ -136,23 +136,43 @@ withjQuery(function($)
 	{
 		//<div class="floorBox_right_T">
 		var content = $(msg).find("div.floorBox_right_T").html();
+		//<div class="img_resize restore_C gut_style" rel="content">
 		obj.find("div#content").append(content);
+		if ($("input#only_attach")[0].checked)
+		{
+			obj.find("div#content").find("div.img_resize.restore_C.gut_style").hide();
+		}
+		obj.find("div#content").find("img[data-ks-lazyload]").each(function(){
+			$(this).attr("src", $(this).attr("data-ks-lazyload"));
+		});
 	}
 		
 	function objToggle(obj)
 	{
 		var obja = obj.find("a[ajax]");
+		var url = obj.find("div#url").text();
 		if (obja.attr("ajax") == 0)
 		{
 			obja.attr("ajax", "1");
-			var url = obj.find("div#url").text();
 			//第一次点击的时候才会去请求数据，防止对服务器并发太多
 			$.ajax({ url:url, async:false, success: function(msg){getPicContent(obj, msg)}});
 		}
-		obj.find("div#content").find("img[data-ks-lazyload]").each(function(){
-			$(this).attr("src", $(this).attr("data-ks-lazyload"));
-		});
 		obj.find("div#content").slideToggle("slow");
+	}
+	
+	function autoAjax(obj, url)
+	{
+		//防止对服务器造成过大的并发，不一次性请求所有数据，在objToggle里面点一次，请求一个。
+		if ($("input#auto_expand")[0].checked )
+		{
+			obj.attr("ajax", "1");
+			$.ajax({ url:url, success: function(msg){getPicContent(obj, msg)}});
+			obj.parent("span.pr20").find("div#content").show();
+		}
+		else
+		{
+			obj.parent("span.pr20").find("div#content").hide();
+		}
 	}
 	
 	function getPic(obj)
@@ -165,9 +185,7 @@ withjQuery(function($)
 		obj.attr("ajax", "0");
 		temp_str = giveFiveStr.replace(/#url#/, url);
 		obj.append(temp_str);
-		obj.parent("span.pr20").find("div#content").hide();
-		//防止对服务器造成过大的并发，不一次性请求所有数据，在objToggle里面点一次，请求一个。
-		//$.ajax({ url:url, success: function(msg){getPicContent(obj, msg)}});
+		autoAjax(obj, url);
 		obj.removeAttr("href");
 
 		//http://xinsheng.huawei.com/cn/index.php?app=forum&amp;mod=Detail&amp;act=index&amp;id=884633
@@ -334,6 +352,7 @@ withjQuery(function($)
 				{
 					showLastResult($(tr_temp).find("td.del a[ajax] span.fires_icon").first(), cent);
 				}
+				$(tr_temp).find("span.pr20 a").each(function(){autoAjax($(this), temp_url);});
 				$(tr_temp).find("td.del").click(function(){objToggle($(this))});
 				$(tr_temp).find("td.del").mouseout(function(){clearFiv($(this))});
 				$(tr_temp).find("span.fires_icon").mouseover(function(){giveFive($(this), 0);});
@@ -386,20 +405,32 @@ withjQuery(function($)
 		});
 	}
 	
-	$("span.pr20 a").each(function(){getPic($(this));});
-	$("td.del").click(function(){objToggle($(this))});
-	$("td.del").mouseout(function(){clearFiv($(this))});
-	$("span.fires_icon").mouseover(function(){giveFive($(this), 0);});
-	$("span.fires_icon").click(function(){giveFive($(this), 1);});
+	function save_conf(obj)
+	{
+		setCookie(obj.attr("id"), obj[0].checked?1:0);
+		sort_msg("该配置将在下次刷新页面后生效");
+	}
 	
 	//score board
 	var org_button=$("input[value='发表新帖']");
 	var local_sort_str="&nbsp;<input id='local_sort' class='text_button mt5' type='button' value='本地排行'>&nbsp;";
 	org_button.after(local_sort_str);
 	var net_sort_str="&nbsp;<input id='net_sort' class='text_button mt5' type='button' value='网络榜单'>&nbsp;";
-	net_sort_str = net_sort_str + "<div id='sort_msg' style='display: none;'></div>";
+	net_sort_str = net_sort_str + "<input type='checkbox' id='auto_expand' name='conf'>自动展开&nbsp;"+
+					"<input type='checkbox' id='only_attach' name='conf'>只显示附件&nbsp;" +
+					"<div id='sort_msg' style='display: none;'></div>";
 	$("input#local_sort").after(net_sort_str);
 	$("input#local_sort").click(function(){local_sort($(this));});
 	$("input#net_sort").click(function(){net_sort($(this));});
+	if (getCookie("auto_expand") == 1){$("input#auto_expand")[0].checked = true}
+	if (getCookie("only_attach") == 1){$("input#only_attach")[0].checked = true}
+	$("input[name='conf']").change(function(){save_conf($(this));});
+	//
+	$("span.pr20 a").each(function(){getPic($(this));});
+	$("td.del").click(function(){objToggle($(this))});
+	$("td.del").mouseout(function(){clearFiv($(this))});
+	$("span.fires_icon").mouseover(function(){giveFive($(this), 0);});
+	$("span.fires_icon").click(function(){giveFive($(this), 1);});
+
 	
 }, true);
