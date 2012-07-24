@@ -100,7 +100,11 @@ withjQuery(function($)
 					"&nbsp;<input type='checkbox' id='auto_expand' name='conf'>自动展开&nbsp;"+
 					"&nbsp;<input type='checkbox' id='only_attach' name='conf'>只显示附件&nbsp;" +
 					"<div id='sort_msg' style='display: none;'></div>";
+					
+	var pic_hot = "http://xinsheng-image.huawei.com/cn/forumimage/data/uploads/2010/1213/22/4d0627ac71298.gif";
+	var pic_nor = "http://xinsheng-image.huawei.com/cn/forumimage/data/uploads/2010/1213/22/4d0627059851c.gif"
 	var hwface = unSerialize(getCookie("hwface"));
+	var sort_obj = new Array();
 	
 	function setCookie(c_name,value,expiredays)
 	{
@@ -146,9 +150,10 @@ withjQuery(function($)
 		obj.find("div#content").append(content);
 		if ($("input#only_attach")[0].checked)
 		{
-			obj.find("div#content").find("div.img_resize.restore_C.gut_style").hide();
+			obj.find("div.img_resize.restore_C.gut_style").hide();
 		}
-		obj.find("div#content").find("img[data-ks-lazyload]").each(function(){
+		obj.find("div.img_resize.restore_C.gut_style div.cl").css("white-space","normal");
+		obj.find("div#content img[data-ks-lazyload]").each(function(){
 			$(this).attr("src", $(this).attr("data-ks-lazyload"));
 		});
 	}
@@ -328,13 +333,71 @@ withjQuery(function($)
 	}
 	
 	//入口 network_flag?json对象:hwface
-	function showSortTable(obj, network_flag)
+	function showSortTable(start_pos, end_pos, total_len, network_flag)
 	{
 		$("table.ta_list").find("tr[sort]").remove();
 		var table_obj = $("table.ta_list").find("tr").first();
 		var clone_obj = $("table.ta_list").find("tr").has("td.del img").first();
 		var i = 0;
+		for (i = start_pos; i < end_pos; i++)
+		{
+			uid = sort_obj[i]["uid"];
+			cent = sort_obj[i]["cent"];
+			count = sort_obj[i]["count"];
+			
+			var tr_temp = clone_obj.clone();
+			$(tr_temp).attr("class", (i%2)?"list_bm":"list_bm no_bg");
+			var tempa = $(tr_temp).find("td.del span.pr20 a[ajax]");
+			tempa.attr("title", "心动女生: "+uid)
+			tempa.html(tempa.attr("title"));
+			tempa.attr("uid", uid);
+			tempa.attr("ajax", 0);
+			temp_url = "http://xinsheng.huawei.com/cn/index.php?app=forum&mod=Detail&act=index&id=" + uid;
+			temp_str = giveFiveStr.replace(/#url#/, temp_url);
+			tempa.append(temp_str);
+			
+			if (network_flag && hwface[uid])
+			{
+				showLastResult($(tr_temp).find("td.del a[ajax] span.fires_icon").first(), hwface[uid]);
+			}
+			else if (!network_flag)
+			{
+				showLastResult($(tr_temp).find("td.del a[ajax] span.fires_icon").first(), cent);
+			}
+			//更换图片
+			$(tr_temp).find("td.del img").attr("src", (i < 10)?pic_hot:pic_nor);
+			$(tr_temp).find("span.pr20 a").each(function(){autoAjax($(this), temp_url);});
+			$(tr_temp).find("td.del").click(function(){objToggle($(this))});
+			$(tr_temp).find("td.del").mouseout(function(){clearFiv($(this))});
+			$(tr_temp).find("span.fires_icon").mouseover(function(){giveFive($(this), 0);});
+			$(tr_temp).find("span.fires_icon").click(function(){giveFive($(this), 1);});
+			
+			$(tr_temp).find("td[align='center'][style]").html("Top "+ (i+1));
+			$(tr_temp).find("td.del_name").html("hwface");
+			$(tr_temp).find("td[align='right'][style]").html("心动指数:"+cent);
+			$(tr_temp).attr("sort", (network_flag)?"net":"local");
+			table_obj.before(tr_temp);
+		}
+		if (end_pos == total_len)
+		{
+		
+		}
+		else
+		{
+		}
+		//table_obj.before("<tr><td clospan=4>test</td></tr>");
+		//$("td[clospan=4]").parent("tr").addClass("list_bm no_bg")
+		//$("table.ta_list").find("tr:not([sort])").first().before("<tr><th clospan=4></th></tr>")
+	}
+	
+	//入口 network_flag?json对象:hwface
+	function obj_sort_func(obj, network_flag)
+	{
+		var i = 0;
 		var j = 0;
+		var cent = 0;
+		var count = 1;
+		sort_obj = new Array();
 		for (i = 50, j = 0; i >= 1 && j < 100; i--)
 		{
 			for (uid in obj)
@@ -350,40 +413,16 @@ withjQuery(function($)
 					if (i %10){continue;}
 				}
 				if (cent*10 != i || j >= 100){continue;}
-				var tr_temp = clone_obj.clone();
-				$(tr_temp).attr("class", (j%2)?"list_bm":"list_bm no_bg");
-				var tempa = $(tr_temp).find("td.del span.pr20 a[ajax]");
-				tempa.html("score for "+uid);
-				tempa.attr("uid", uid);
-				tempa.attr("ajax", 0);
-				temp_url = "http://xinsheng.huawei.com/cn/index.php?app=forum&mod=Detail&act=index&id=" + uid;
-				temp_str = giveFiveStr.replace(/#url#/, temp_url);
-				tempa.append(temp_str);
-				
-				if (network_flag && hwface[uid])
-				{
-					showLastResult($(tr_temp).find("td.del a[ajax] span.fires_icon").first(), hwface[uid]);
-				}
-				else if (!network_flag)
-				{
-					showLastResult($(tr_temp).find("td.del a[ajax] span.fires_icon").first(), cent);
-				}
-				$(tr_temp).find("span.pr20 a").each(function(){autoAjax($(this), temp_url);});
-				$(tr_temp).find("td.del").click(function(){objToggle($(this))});
-				$(tr_temp).find("td.del").mouseout(function(){clearFiv($(this))});
-				$(tr_temp).find("span.fires_icon").mouseover(function(){giveFive($(this), 0);});
-				$(tr_temp).find("span.fires_icon").click(function(){giveFive($(this), 1);});
-				
-				$(tr_temp).find("td[align='center'][style]").html("Top "+ (j+1));
-				$(tr_temp).find("td.del_name").html("hwface");
-				$(tr_temp).find("td[align='right'][style]").html("心动指数:"+cent);
-				$(tr_temp).attr("sort", (network_flag)?"net":"local");
-				table_obj.before(tr_temp);
+
+				sort_obj[j] = new Array();
+				sort_obj[j]['uid'] = uid;
+				sort_obj[j]['cent'] = cent;
+				sort_obj[j]['count'] = count;
 				j++;
 			}
 		}
 	}
-	
+
 	//string
 	function sort_msg(msg)
 	{
@@ -391,13 +430,14 @@ withjQuery(function($)
 		$("div#sort_msg").show();
 		$("div#sort_msg").fadeOut(3000);
 	}
-	
+
 	function local_sort(obj)
 	{
 		//sort_msg("本地排行功能暂时未开放");
 		if ($("table.ta_list").find("tr[sort]") && $("table.ta_list").find("tr[sort]").attr("sort") == "local")
 		{return;}
-		showSortTable(hwface);
+		obj_sort_func(hwface);
+		showSortTable(0, sort_obj.length, sort_obj.length);
 	}
 	
 	function net_sort(obj)
@@ -413,7 +453,8 @@ withjQuery(function($)
 			jsonpCallback:"success_jsonpCallback",
 			success: function(msg)
 			{
-				showSortTable(msg, 1);
+				obj_sort_func(msg, 1);
+				showSortTable(0, sort_obj.length, sort_obj.length, 1);
 			},
 			error: function(msg)
 			{
@@ -426,7 +467,31 @@ withjQuery(function($)
 	function save_conf(obj)
 	{
 		setCookie(obj.attr("id"), obj[0].checked?1:0);
-		sort_msg("该配置将在下次刷新页面后生效");
+		sort_msg("该配置将在下次刷新页面后完全生效");
+	}
+	
+	//$("input#auto_expand")
+	function auto_expand_click(obj)
+	{
+		if (obj[0].checked)
+		{
+			alert("“自动展开”配置启用后，将会降低加载速度，并会对服务器造成一定的压力。\n\n请慎重使用!!!");
+		}
+		save_conf(obj);
+	}
+	
+	//$("input#only_attach")
+	function only_attach_click(obj)
+	{
+		if ($("input#only_attach")[0].checked)
+		{
+			$("div.img_resize.restore_C.gut_style").hide();
+		}
+		else
+		{
+			$("div.img_resize.restore_C.gut_style").show();
+		}
+		save_conf(obj);
 	}
 	
 	//score board
@@ -435,7 +500,8 @@ withjQuery(function($)
 	$("input#net_sort").click(function(){net_sort($(this));});
 	$("input#auto_expand")[0].checked = getCookie("auto_expand")*1;
 	$("input#only_attach")[0].checked = getCookie("only_attach")*1;
-	$("input[name='conf']").change(function(){save_conf($(this));});
+	$("input#auto_expand").change(function(){auto_expand_click($(this));});
+	$("input#only_attach").change(function(){only_attach_click($(this));});
 	//
 	$("span.pr20 a").each(function(){getPic($(this));});
 	$("td.del").click(function(){objToggle($(this))});
@@ -443,5 +509,6 @@ withjQuery(function($)
 	$("span.fires_icon").mouseover(function(){giveFive($(this), 0);});
 	$("span.fires_icon").click(function(){giveFive($(this), 1);});
 
-	
+	//hot 地址 http://xinsheng-image.huawei.com/cn/forumimage/data/uploads/2010/1213/22/4d0627ac71298.gif
+	//pai 地址 http://xinsheng-image.huawei.com/cn/forumimage/data/uploads/2010/1213/22/4d0627059851c.gif
 }, true);
