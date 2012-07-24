@@ -94,16 +94,20 @@ withjQuery(function($)
 					"<span class=\"fires_icon\" cent=3 lock=0 title=\"不错不错\" style=\"opacity: 0.4; \">&nbsp;</span>" +
 					"<span class=\"fires_icon\" cent=4 lock=0 title=\"来电咯\" style=\"opacity: 0.4; \">&nbsp;</span>" +
 					"<span class=\"fires_icon\" cent=5 lock=0 title=\"女神下凡\" style=\"opacity: 0.4; \">&nbsp;</span>" +
-					"<a id=\"votemsg\"></a><div id='content' style='display: none;'><div id='url'>#url#</div></div>";
+					"<a id=\"votemsg\"></a><div id='content' style='display: none;'><div id='url'><a href='#url#'>#url#</a></div></div>";
 	var new_button_str = "&nbsp;<input id='local_sort' class='text_button mt5' type='button' value='本地排行'>&nbsp;" +
 					"&nbsp;<input id='net_sort' class='text_button mt5' type='button' value='网络榜单'>&nbsp;" +
 					"&nbsp;<input type='checkbox' id='auto_expand' name='conf'>自动展开&nbsp;"+
 					"&nbsp;<input type='checkbox' id='only_attach' name='conf'>只显示附件&nbsp;" +
 					"<div id='sort_msg' style='display: none;'></div>";
+	var read_more_str = "<tr class='list_2_tit' sort><td align='center' id='more_text'></td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>";
 					
 	var pic_hot = "http://xinsheng-image.huawei.com/cn/forumimage/data/uploads/2010/1213/22/4d0627ac71298.gif";
 	var pic_nor = "http://xinsheng-image.huawei.com/cn/forumimage/data/uploads/2010/1213/22/4d0627059851c.gif"
 	var hwface = unSerialize(getCookie("hwface"));
+	var network_sort_flag = 0;
+	var sort_page = 0;
+	var num_per_page = 20;
 	var sort_obj = new Array();
 	
 	function setCookie(c_name,value,expiredays)
@@ -197,7 +201,7 @@ withjQuery(function($)
 		}
 		var url = obj.attr("href");
 		obj.attr("ajax", "0");
-		temp_str = giveFiveStr.replace(/#url#/, url);
+		temp_str = giveFiveStr.replace(/#url#/g, url);
 		obj.append(temp_str);
 		autoAjax(obj, url);
 		obj.removeAttr("href");
@@ -332,14 +336,27 @@ withjQuery(function($)
 		obj.find("span.fires_icon[lock=0]").fadeTo("fast",0.4);
 	}
 	
-	//入口 network_flag?json对象:hwface
-	function showSortTable(start_pos, end_pos, total_len, network_flag)
+	function showSortPage(curr_page, total_len)
 	{
-		$("table.ta_list").find("tr[sort]").remove();
-		var table_obj = $("table.ta_list").find("tr").first();
-		var clone_obj = $("table.ta_list").find("tr").has("td.del img").first();
+		sort_page = curr_page;
+		showSortTable((curr_page -1)*num_per_page, curr_page*num_per_page, total_len);
+	}
+	
+	//入口 network_sort_flag?json对象:hwface
+	function showSortTable(start_pos, end_pos, total_len)
+	{
+		if (start_pos == 0)
+		{
+			$("table.ta_list").find("tr[sort]").remove();
+		}
+		else
+		{
+			$("table.ta_list tr.list_2_tit").has("td#more_text").remove();
+		}
+		var table_obj = $("table.ta_list").find("tr:not([sort])").first();
+		var clone_obj = $("table.ta_list").find("tr:not([sort])").has("td.del img").first();
 		var i = 0;
-		for (i = start_pos; i < end_pos; i++)
+		for (i = start_pos; i < end_pos && sort_obj[i]; i++)
 		{
 			uid = sort_obj[i]["uid"];
 			cent = sort_obj[i]["cent"];
@@ -353,14 +370,14 @@ withjQuery(function($)
 			tempa.attr("uid", uid);
 			tempa.attr("ajax", 0);
 			temp_url = "http://xinsheng.huawei.com/cn/index.php?app=forum&mod=Detail&act=index&id=" + uid;
-			temp_str = giveFiveStr.replace(/#url#/, temp_url);
+			temp_str = giveFiveStr.replace(/#url#/g, temp_url);
 			tempa.append(temp_str);
 			
-			if (network_flag && hwface[uid])
+			if (network_sort_flag && hwface[uid])
 			{
 				showLastResult($(tr_temp).find("td.del a[ajax] span.fires_icon").first(), hwface[uid]);
 			}
-			else if (!network_flag)
+			else if (!network_sort_flag)
 			{
 				showLastResult($(tr_temp).find("td.del a[ajax] span.fires_icon").first(), cent);
 			}
@@ -375,23 +392,25 @@ withjQuery(function($)
 			$(tr_temp).find("td[align='center'][style]").html("Top "+ (i+1));
 			$(tr_temp).find("td.del_name").html("hwface");
 			$(tr_temp).find("td[align='right'][style]").html("心动指数:"+cent);
-			$(tr_temp).attr("sort", (network_flag)?"net":"local");
+			$(tr_temp).attr("sort", (network_sort_flag)?"net":"local");
 			table_obj.before(tr_temp);
 		}
-		if (end_pos == total_len)
+		if (end_pos >= total_len)
 		{
 		
 		}
 		else
 		{
+			$("table.ta_list").find("tr:not([sort])").first().before(read_more_str);
+			$("table.ta_list tr.list_2_tit td#more_text").text("更多榜单内容");
+			$("table.ta_list tr.list_2_tit").click(function(){
+				showSortPage(sort_page + 1, total_len);
+			});
 		}
-		//table_obj.before("<tr><td clospan=4>test</td></tr>");
-		//$("td[clospan=4]").parent("tr").addClass("list_bm no_bg")
-		//$("table.ta_list").find("tr:not([sort])").first().before("<tr><th clospan=4></th></tr>")
 	}
 	
-	//入口 network_flag?json对象:hwface
-	function obj_sort_func(obj, network_flag)
+	//入口 network_sort_flag?json对象:hwface
+	function obj_sort_func(obj)
 	{
 		var i = 0;
 		var j = 0;
@@ -402,7 +421,7 @@ withjQuery(function($)
 		{
 			for (uid in obj)
 			{
-				if (network_flag)
+				if (network_sort_flag)
 				{
 					cent = obj[uid]["avg"];
 					count = obj[uid]["count"];
@@ -436,8 +455,9 @@ withjQuery(function($)
 		//sort_msg("本地排行功能暂时未开放");
 		if ($("table.ta_list").find("tr[sort]") && $("table.ta_list").find("tr[sort]").attr("sort") == "local")
 		{return;}
+		network_sort_flag = 0;
 		obj_sort_func(hwface);
-		showSortTable(0, sort_obj.length, sort_obj.length);
+		showSortPage(1, sort_obj.length);
 	}
 	
 	function net_sort(obj)
@@ -453,8 +473,9 @@ withjQuery(function($)
 			jsonpCallback:"success_jsonpCallback",
 			success: function(msg)
 			{
-				obj_sort_func(msg, 1);
-				showSortTable(0, sort_obj.length, sort_obj.length, 1);
+				network_sort_flag = 1;
+				obj_sort_func(msg);
+				showSortPage(1, sort_obj.length);
 			},
 			error: function(msg)
 			{
@@ -509,6 +530,4 @@ withjQuery(function($)
 	$("span.fires_icon").mouseover(function(){giveFive($(this), 0);});
 	$("span.fires_icon").click(function(){giveFive($(this), 1);});
 
-	//hot 地址 http://xinsheng-image.huawei.com/cn/forumimage/data/uploads/2010/1213/22/4d0627ac71298.gif
-	//pai 地址 http://xinsheng-image.huawei.com/cn/forumimage/data/uploads/2010/1213/22/4d0627059851c.gif
 }, true);
