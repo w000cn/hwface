@@ -95,6 +95,11 @@ withjQuery(function($)
 					"<span class=\"fires_icon\" cent=4 lock=0 title=\"来电咯\" style=\"opacity: 0.4; \">&nbsp;</span>" +
 					"<span class=\"fires_icon\" cent=5 lock=0 title=\"女神下凡\" style=\"opacity: 0.4; \">&nbsp;</span>" +
 					"<a id=\"votemsg\"></a><div id='content' style='display: none;'><div id='url'>#url#</div></div>";
+	var new_button_str = "&nbsp;<input id='local_sort' class='text_button mt5' type='button' value='本地排行'>&nbsp;" +
+					"&nbsp;<input id='net_sort' class='text_button mt5' type='button' value='网络榜单'>&nbsp;" +
+					"&nbsp;<input type='checkbox' id='auto_expand' name='conf'>自动展开&nbsp;"+
+					"&nbsp;<input type='checkbox' id='only_attach' name='conf'>只显示附件&nbsp;" +
+					"<div id='sort_msg' style='display: none;'></div>";
 	var hwface = unSerialize(getCookie("hwface"));
 	
 	function setCookie(c_name,value,expiredays)
@@ -132,6 +137,7 @@ withjQuery(function($)
 		return eval("tempobj={"+cookie_str+"}");
 	}
 	
+	//入口$("td.del")
 	function getPicContent(obj, msg)
 	{
 		//<div class="floorBox_right_T">
@@ -146,7 +152,8 @@ withjQuery(function($)
 			$(this).attr("src", $(this).attr("data-ks-lazyload"));
 		});
 	}
-		
+	
+	//入口$("td.del")
 	function objToggle(obj)
 	{
 		var obja = obj.find("a[ajax]");
@@ -160,6 +167,7 @@ withjQuery(function($)
 		obj.find("div#content").slideToggle("slow");
 	}
 	
+	//入口$("span.pr20 a")
 	function autoAjax(obj, url)
 	{
 		//防止对服务器造成过大的并发，不一次性请求所有数据，在objToggle里面点一次，请求一个。
@@ -175,9 +183,10 @@ withjQuery(function($)
 		}
 	}
 	
+	//入口$("span.pr20 a")
 	function getPic(obj)
 	{
-		if (!obj || !obj.html() )
+		if (!obj || !obj.html() || !obj.parents("td.del").length || !obj.parents("td.del").has("img").length)
 		{
 			return;
 		}
@@ -202,6 +211,7 @@ withjQuery(function($)
 		}
 	}
 	
+	//入口$("span.fires_icon[cent=5]")
 	function vote_msg(obj, msg)
 	{
 		obj.parent("span.pr20 a").find("a#votemsg").html(msg);
@@ -209,6 +219,7 @@ withjQuery(function($)
 		obj.parent("span.pr20 a").find("a#votemsg").fadeTo(3000,0);
 	}
 	
+	//入口$("td.del a[ajax] span.fires_icon")
 	function showLastResult(obj, cent)
 	{
 		var temp_obj;
@@ -225,6 +236,7 @@ withjQuery(function($)
 		}
 	}
 	
+	//入口$("td.del a[ajax] span.fires_icon")
 	function vote_to_server(obj)
 	{
 		var str = "cent=" + obj.attr("cent") + "&uid=";
@@ -267,6 +279,7 @@ withjQuery(function($)
 		}
 	}
 	
+	//入口$("span.fires_icon")
 	//flag 0, 临时暂时; flag 投票结果
 	function giveFive(obj, flag)
 	{
@@ -308,18 +321,21 @@ withjQuery(function($)
 		}
 	}
 	
+	//入口$("td.del")
 	function clearFiv(obj)
 	{
 		obj.find("span.fires_icon[lock=0]").fadeTo("fast",0.4);
 	}
 	
+	//入口 network_flag?json对象:hwface
 	function showSortTable(obj, network_flag)
 	{
 		$("table.ta_list").find("tr[sort]").remove();
 		var table_obj = $("table.ta_list").find("tr").first();
+		var clone_obj = $("table.ta_list").find("tr").has("td.del img").first();
 		var i = 0;
 		var j = 0;
-		for (i = 50, j = 0; i >= 1; i--)
+		for (i = 50, j = 0; i >= 1 && j < 100; i--)
 		{
 			for (uid in obj)
 			{
@@ -333,8 +349,8 @@ withjQuery(function($)
 					cent = obj[uid];
 					if (i %10){continue;}
 				}
-				if (cent*10 != i){continue;}
-				var tr_temp = table_obj.clone();
+				if (cent*10 != i || j >= 100){continue;}
+				var tr_temp = clone_obj.clone();
 				$(tr_temp).attr("class", (j%2)?"list_bm":"list_bm no_bg");
 				var tempa = $(tr_temp).find("td.del span.pr20 a[ajax]");
 				tempa.html("score for "+uid);
@@ -368,6 +384,7 @@ withjQuery(function($)
 		}
 	}
 	
+	//string
 	function sort_msg(msg)
 	{
 		$("div#sort_msg").html(msg);
@@ -405,6 +422,7 @@ withjQuery(function($)
 		});
 	}
 	
+	//入口$("input[name='conf']")
 	function save_conf(obj)
 	{
 		setCookie(obj.attr("id"), obj[0].checked?1:0);
@@ -412,18 +430,11 @@ withjQuery(function($)
 	}
 	
 	//score board
-	var org_button=$("input[value='发表新帖']");
-	var local_sort_str="&nbsp;<input id='local_sort' class='text_button mt5' type='button' value='本地排行'>&nbsp;";
-	org_button.after(local_sort_str);
-	var net_sort_str="&nbsp;<input id='net_sort' class='text_button mt5' type='button' value='网络榜单'>&nbsp;";
-	net_sort_str = net_sort_str + "<input type='checkbox' id='auto_expand' name='conf'>自动展开&nbsp;"+
-					"<input type='checkbox' id='only_attach' name='conf'>只显示附件&nbsp;" +
-					"<div id='sort_msg' style='display: none;'></div>";
-	$("input#local_sort").after(net_sort_str);
+	$("input[value='发表新帖']").after(new_button_str);
 	$("input#local_sort").click(function(){local_sort($(this));});
 	$("input#net_sort").click(function(){net_sort($(this));});
-	if (getCookie("auto_expand") == 1){$("input#auto_expand")[0].checked = true}
-	if (getCookie("only_attach") == 1){$("input#only_attach")[0].checked = true}
+	$("input#auto_expand")[0].checked = getCookie("auto_expand")*1;
+	$("input#only_attach")[0].checked = getCookie("only_attach")*1;
 	$("input[name='conf']").change(function(){save_conf($(this));});
 	//
 	$("span.pr20 a").each(function(){getPic($(this));});
