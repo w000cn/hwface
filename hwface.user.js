@@ -97,6 +97,7 @@ withjQuery(function($)
 					"<a id=\"votemsg\"></a><div id='content' style='display: none;'><div id='url'><a href='#url#'>#url#</a></div></div>";
 	var new_button_str = "&nbsp;<input id='local_sort' class='text_button mt5' type='button' value='本地排行'>&nbsp;" +
 					"&nbsp;<input id='net_sort' class='text_button mt5' type='button' value='网络榜单'>&nbsp;" +
+					"&nbsp;<input id='find_smby' class='text_button mt5' type='button' value='可爱女人'>&nbsp;" +
 					"&nbsp;<input type='checkbox' id='auto_expand' name='conf'>自动展开&nbsp;"+
 					"&nbsp;<input type='checkbox' id='only_attach' name='conf'>只显示附件&nbsp;" +
 					"<div id='sort_msg' style='display: none;'></div>";
@@ -511,6 +512,11 @@ withjQuery(function($)
 		});
 	}
 	
+	function find_smby(obj)
+	{
+		sort_msg("该功能暂时未开放");
+	}
+	
 	//入口$("input[name='conf']")
 	function save_conf(obj)
 	{
@@ -585,6 +591,7 @@ withjQuery(function($)
 	$("input[value='发表新帖']").after(new_button_str);
 	$("input#local_sort").click(function(){local_sort($(this));});
 	$("input#net_sort").click(function(){net_sort($(this));});
+	$("input#find_smby").click(function(){find_smby($(this));});
 	$("input#auto_expand")[0].checked = getCookie("auto_expand")*1;
 	$("input#only_attach")[0].checked = getCookie("only_attach")*1;
 	$("input#auto_expand").change(function(){auto_expand_click($(this));});
