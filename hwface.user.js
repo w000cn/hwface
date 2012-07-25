@@ -166,6 +166,16 @@ withjQuery(function($)
 		return curr_max_page;
 	}
 	
+	//入口 $("table.ta_list tr.list_bm") / $(tr_temp)
+	function createHWfaceInfo(obj)
+	{
+		obj.find("span.pr20 a").each(function(){getPic($(this));});
+		obj.find("td.del").click(function(){objToggle($(this))});
+		obj.find("td.del").mouseout(function(){clearFiv($(this))});
+		obj.find("span.fires_icon").mouseover(function(){give_five_click($(this), 0);});
+		obj.find("span.fires_icon").click(function(){give_five_click($(this), 1);});
+	}
+	
 	//入口$("td.del")
 	function getPicContent(obj, msg)
 	{
@@ -216,7 +226,7 @@ withjQuery(function($)
 	//入口$("span.pr20 a")
 	function getPic(obj)
 	{
-		if (!obj || !obj.html() || !obj.parents("td.del").length || !obj.parents("td.del").has("img").length)
+		if (!obj || !obj.html() || !obj.parents("td.del").length || !obj.parents("td.del").find("img").length)
 		{
 			return;
 		}
@@ -231,15 +241,8 @@ withjQuery(function($)
 		//http://xinsheng.huawei.com/cn/index.php?app=forum&amp;mod=Detail&amp;act=index&amp;id=884633
 		var match = url && url.match(/.*id=([0-9]*)/i);
 		var uid = match && match[1];
-		if (uid)
-		{
-			obj.attr("uid", uid);
-			var cent = hwface[uid];
-			if (cent)
-			{
-				showLastResult(obj.find("span.fires_icon"), cent);
-			}
-		}
+		obj.attr("uid", uid);
+		showLastResult(obj.find("span.fires_icon"), hwface[uid]);
 	}
 	
 	//入口$("span.fires_icon[cent=5]")
@@ -263,7 +266,7 @@ withjQuery(function($)
 		{
 			temp_obj = obj.parents("span.pr20 a").find("span.fires_icon[cent="+i+"]");
 			temp_obj.fadeTo("fast",(i <= cent)?1:0.4);
-			temp_obj.attr("lock",1);
+			temp_obj.attr("lock", cent?1:0);
 		}
 	}
 	
@@ -299,8 +302,15 @@ withjQuery(function($)
 				jsonpCallback:"success_jsonpCallback",
 				success: function(msg)
 				{
-					vote_msg(temp_obj, "感谢投票,目前平均分:"+msg["new_cent"]+".");
-					showLastResult(obj, msg["new_cent"]);
+					if (msg["new_cent"])
+					{
+						vote_msg(temp_obj, "感谢投票,目前平均分:"+msg["new_cent"]+".");
+						showLastResult(obj, msg["new_cent"]);
+					}
+					else
+					{
+						vote_msg(temp_obj, msg["message"]);
+					}
 				},
 				error: function(msg)
 				{
@@ -391,34 +401,21 @@ withjQuery(function($)
 			count = sort_obj[i]["count"];
 			
 			var tr_temp = clone_obj.clone();
-			$(tr_temp).attr("class", (i%2)?"list_bm":"list_bm no_bg");
-			var tempa = $(tr_temp).find("td.del span.pr20 a[ajax]");
-			tempa.attr("title", "心动女生: "+uid)
-			tempa.html(tempa.attr("title"));
-			tempa.attr("uid", uid);
-			tempa.attr("ajax", 0);
-			temp_url = "http://xinsheng.huawei.com/cn/index.php?app=forum&mod=Detail&act=index&id=" + uid;
-			temp_str = giveFiveStr.replace(/#url#/g, temp_url);
-			tempa.append(temp_str);
-			
-			if (network_sort_flag && hwface[uid])
-			{
-				showLastResult($(tr_temp).find("td.del a[ajax] span.fires_icon").first(), hwface[uid]);
-			}
-			else if (!network_sort_flag)
-			{
-				showLastResult($(tr_temp).find("td.del a[ajax] span.fires_icon").first(), cent);
-			}
+			var temp_url = "http://xinsheng.huawei.com/cn/index.php?app=forum&mod=Detail&act=index&id=" + uid;
+
 			//更换图片
 			$(tr_temp).find("td.del img").attr("src", (i < 10)?pic_hot:pic_nor);
-			$(tr_temp).find("span.pr20 a").each(function(){autoAjax($(this), temp_url);});
-			$(tr_temp).find("td.del").click(function(){objToggle($(this))});
-			$(tr_temp).find("td.del").mouseout(function(){clearFiv($(this))});
-			$(tr_temp).find("span.fires_icon").mouseover(function(){give_five_click($(this), 0);});
-			$(tr_temp).find("span.fires_icon").click(function(){give_five_click($(this), 1);});
+			$(tr_temp).attr("class", (i%2)?"list_bm":"list_bm no_bg");
 			
-			$(tr_temp).find("td[align='center'][style]").html("Top "+ (i+1));
+			var tempa = $(tr_temp).find("td.del span.pr20 a[ajax]");
+			tempa.attr("title", "心动女生: "+uid)
+			tempa.html(tempa.attr("title"));			
+			tempa.attr("href", temp_url);
+			
+			createHWfaceInfo($(tr_temp));
+			//第二列/三四
 			$(tr_temp).find("td.del_name").html("hwface");
+			$(tr_temp).find("td[align='center'][style]").html("Top "+ (i+1));
 			$(tr_temp).find("td[align='right'][style]").html("心动指数:"+cent);
 			$(tr_temp).attr("sort", (network_sort_flag)?"net":"local");
 			table_obj.before(tr_temp);
@@ -547,7 +544,11 @@ withjQuery(function($)
 	
 	function magic_page_load(msg, new_page)
 	{
-		$("td#magic_page").parent("tr").before($(msg).find("table.ta_list tr.list_bm"));
+		var i = 0;
+		var magic_obj = $(msg).find("table.ta_list tr.list_bm");
+
+		createHWfaceInfo($(magic_obj));
+		$("td#magic_page").parent("tr").before($(magic_obj));
 		
 		current_page = new_page;
 		if (new_page >= max_page)
@@ -589,11 +590,7 @@ withjQuery(function($)
 	$("input#auto_expand").change(function(){auto_expand_click($(this));});
 	$("input#only_attach").change(function(){only_attach_click($(this));});
 	//
-	$("span.pr20 a").each(function(){getPic($(this));});
-	$("td.del").click(function(){objToggle($(this))});
-	$("td.del").mouseout(function(){clearFiv($(this))});
-	$("span.fires_icon").mouseover(function(){give_five_click($(this), 0);});
-	$("span.fires_icon").click(function(){give_five_click($(this), 1);});
+	createHWfaceInfo($("table.ta_list tr.list_bm"));
 	
 	//magic page 
 	if (current_page < max_page)
