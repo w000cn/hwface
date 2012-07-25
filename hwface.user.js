@@ -89,25 +89,27 @@ withjQuery(function($)
 {
 	var vote_url = "http://hwface.sinaapp.com/vote.php";	
 	var sort_url = "http://hwface.sinaapp.com/sort.php";
-	var giveFiveStr = "<span class=\"fires_icon\" cent=1 lock=0 title=\"一般一般\" style=\"opacity: 0.4; \">&nbsp;</span>" +
+	var giveFiveStr = "<span id='star' style='white-space: nowrap'><span class=\"fires_icon\" cent=1 lock=0 title=\"一般一般\" style=\"opacity: 0.4; \">&nbsp;</span>" +
 					"<span class=\"fires_icon\" cent=2 lock=0 title=\"可以可以\" style=\"opacity: 0.4; \">&nbsp;</span>" +
 					"<span class=\"fires_icon\" cent=3 lock=0 title=\"不错不错\" style=\"opacity: 0.4; \">&nbsp;</span>" +
 					"<span class=\"fires_icon\" cent=4 lock=0 title=\"来电咯\" style=\"opacity: 0.4; \">&nbsp;</span>" +
-					"<span class=\"fires_icon\" cent=5 lock=0 title=\"女神下凡\" style=\"opacity: 0.4; \">&nbsp;</span>" +
+					"<span class=\"fires_icon\" cent=5 lock=0 title=\"女神下凡\" style=\"opacity: 0.4; \">&nbsp;</span></span>" +
 					"<a id=\"votemsg\"></a><div id='content' style='display: none;'><div id='url'><a href='#url#'>#url#</a></div></div>";
 	var new_button_str = "&nbsp;<input id='local_sort' class='text_button mt5' type='button' value='本地排行'>&nbsp;" +
 					"&nbsp;<input id='net_sort' class='text_button mt5' type='button' value='网络榜单'>&nbsp;" +
 					"&nbsp;<input type='checkbox' id='auto_expand' name='conf'>自动展开&nbsp;"+
 					"&nbsp;<input type='checkbox' id='only_attach' name='conf'>只显示附件&nbsp;" +
 					"<div id='sort_msg' style='display: none;'></div>";
-	var read_more_str = "<tr class='list_2_tit' sort><td align='center' id='more_text'></td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>";
+	var read_more_str = "<tr class='list_2_tit'><td align='center' id='#id#'></td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>";
 					
 	var pic_hot = "http://xinsheng-image.huawei.com/cn/forumimage/data/uploads/2010/1213/22/4d0627ac71298.gif";
 	var pic_nor = "http://xinsheng-image.huawei.com/cn/forumimage/data/uploads/2010/1213/22/4d0627059851c.gif"
 	var hwface = unSerialize(getCookie("hwface"));
-	var network_sort_flag = 0;
 	var sort_page = 0;
 	var num_per_page = 20;
+	var network_sort_flag = 0;
+	var current_page = $("div.page.R span.current").first().text();
+	var max_page = getMaxPageNum();
 	var sort_obj = new Array();
 	
 	function setCookie(c_name,value,expiredays)
@@ -143,6 +145,25 @@ withjQuery(function($)
 		cookie_str = cookie_str.replace(/=/g,":");
 		cookie_str = cookie_str.replace(/&/g,",");
 		return eval("tempobj={"+cookie_str+"}");
+	}
+		
+	function getMaxPageNum()
+	{
+		var i = 0; 
+		var a_url ;
+		var match;
+		var temp_page = 0;
+		var curr_max_page = 0;
+		var objs = $("div.page.R a");
+		for (i = 0; i < objs.length; i++)
+		{
+			a_url = $(objs[i]).attr("href");
+			//<a href=​"/​cn/​index.php?app=forum&mod=List&act=index&class=468&cate=64&p=5">​5​</a>​
+			match = a_url && a_url.match(/.*&p=([0-9]*)/i);
+			temp_page = match && match[1]*1;
+			curr_max_page = (temp_page > curr_max_page)?temp_page : curr_max_page;
+		}
+		return curr_max_page;
 	}
 	
 	//入口$("td.del")
@@ -184,11 +205,11 @@ withjQuery(function($)
 		{
 			obj.attr("ajax", "1");
 			$.ajax({ url:url, success: function(msg){getPicContent(obj, msg)}});
-			obj.parent("span.pr20").find("div#content").show();
+			obj.parents("span.pr20").find("div#content").show();
 		}
 		else
 		{
-			obj.parent("span.pr20").find("div#content").hide();
+			obj.parents("span.pr20").find("div#content").hide();
 		}
 	}
 	
@@ -205,6 +226,7 @@ withjQuery(function($)
 		obj.append(temp_str);
 		autoAjax(obj, url);
 		obj.removeAttr("href");
+		obj.css("white-space","normal");
 
 		//http://xinsheng.huawei.com/cn/index.php?app=forum&amp;mod=Detail&amp;act=index&amp;id=884633
 		var match = url && url.match(/.*id=([0-9]*)/i);
@@ -223,9 +245,9 @@ withjQuery(function($)
 	//入口$("span.fires_icon[cent=5]")
 	function vote_msg(obj, msg)
 	{
-		obj.parent("span.pr20 a").find("a#votemsg").html(msg);
-		obj.parent("span.pr20 a").find("a#votemsg").fadeTo("fast",1);
-		obj.parent("span.pr20 a").find("a#votemsg").fadeTo(3000,0);
+		obj.parents("span.pr20 a").find("a#votemsg").html(msg);
+		obj.parents("span.pr20 a").find("a#votemsg").fadeTo("fast",1);
+		obj.parents("span.pr20 a").find("a#votemsg").fadeTo(3000,0);
 	}
 	
 	//入口$("td.del a[ajax] span.fires_icon")
@@ -239,7 +261,7 @@ withjQuery(function($)
 		}
 		for (i = 1; i <= 5; i++)
 		{
-			temp_obj = obj.parent("span.pr20 a").find("span.fires_icon[cent="+i+"]");
+			temp_obj = obj.parents("span.pr20 a").find("span.fires_icon[cent="+i+"]");
 			temp_obj.fadeTo("fast",(i <= cent)?1:0.4);
 			temp_obj.attr("lock",1);
 		}
@@ -249,24 +271,24 @@ withjQuery(function($)
 	function vote_to_server(obj)
 	{
 		var str = "cent=" + obj.attr("cent") + "&uid=";
-		var url = obj.parent("span.pr20 a").find("div#url").text();
+		var url = obj.parents("span.pr20 a").find("div#url").text();
 		
-		var newToken = obj.parent("span.pr20 a").attr("uid");
+		var newToken = obj.parents("span.pr20 a").attr("uid");
 		
 		if (newToken)
 		{
 			str = str + newToken;
 			
-			var obja = obj.parent("span.pr20 a[ajax]");
+			var obja = obj.parents("span.pr20 a[ajax]");
 			if (obja.attr("ajax") == 1)
 			{
-				obj.parent("span.pr20 a").find("div#content img[data-ks-lazyload]").each(function()
+				obj.parents("span.pr20 a").find("div#content img[data-ks-lazyload]").each(function()
 				{
 					str = str + "&img[]=" + $(this).attr("data-ks-lazyload");
 				});			
 			}
 			
-			var temp_obj = obj.parent("span.pr20 a").find("span.fires_icon[cent=5]");
+			var temp_obj = obj.parents("span.pr20 a").find("span.fires_icon[cent=5]");
 			$.ajax({
 				url: vote_url,
 				//async: false,
@@ -290,14 +312,22 @@ withjQuery(function($)
 	
 	//入口$("span.fires_icon")
 	//flag 0, 临时暂时; flag 投票结果
-	function giveFive(obj, flag)
+	function give_five_click(obj, flag)
 	{
 		var temp_obj;
 		var vote = 0;
 		var i = 0;
+
+		//如果页面未展开/没有附件，则不允许投票
+		if (flag == 1 && (obj.parents("span.pr20 a").attr("ajax") == 0
+			|| obj.parents("span.pr20 a").find("div#content a[title='点击下载']").length == 0))
+		{
+			vote_msg(obj, "暂时不允许投票");
+			return ;
+		}
 		for (i = 1; i <= 5; i++)
 		{
-			temp_obj = obj.parent("span.pr20 a").find("span.fires_icon[cent="+i+"]");
+			temp_obj = obj.parents("span.pr20 a").find("span.fires_icon[cent="+i+"]");
 			if (i <= obj.attr("cent") && temp_obj.attr("lock") == 0)
 			{
 				temp_obj.fadeTo("fast",1);
@@ -312,9 +342,9 @@ withjQuery(function($)
 		{
 			if (vote == 1)
 			{
-				if (obj.parent("span.pr20 a") && obj.parent("span.pr20 a").attr("uid"))
+				if (obj.parents("span.pr20 a") && obj.parents("span.pr20 a").attr("uid"))
 				{
-					var uid = obj.parent("span.pr20 a").attr("uid");
+					var uid = obj.parents("span.pr20 a").attr("uid");
 					hwface[uid] = obj.attr("cent");					
 					setCookie("hwface", $.param(hwface, false));//
 				}
@@ -323,7 +353,7 @@ withjQuery(function($)
 			}
 			else
 			{
-				temp_obj = obj.parent("span.pr20 a").find("span.fires_icon[cent=5]");
+				temp_obj = obj.parents("span.pr20 a").find("span.fires_icon[cent=5]");
 				vote_msg(temp_obj, "不能重复投票");
 				
 			}
@@ -349,10 +379,8 @@ withjQuery(function($)
 		{
 			$("table.ta_list").find("tr[sort]").remove();
 		}
-		else
-		{
-			$("table.ta_list tr.list_2_tit").has("td#more_text").remove();
-		}
+		$("td#read_more").parent("tr").remove();
+		
 		var table_obj = $("table.ta_list").find("tr:not([sort])").first();
 		var clone_obj = $("table.ta_list").find("tr:not([sort])").has("td.del img").first();
 		var i = 0;
@@ -386,8 +414,8 @@ withjQuery(function($)
 			$(tr_temp).find("span.pr20 a").each(function(){autoAjax($(this), temp_url);});
 			$(tr_temp).find("td.del").click(function(){objToggle($(this))});
 			$(tr_temp).find("td.del").mouseout(function(){clearFiv($(this))});
-			$(tr_temp).find("span.fires_icon").mouseover(function(){giveFive($(this), 0);});
-			$(tr_temp).find("span.fires_icon").click(function(){giveFive($(this), 1);});
+			$(tr_temp).find("span.fires_icon").mouseover(function(){give_five_click($(this), 0);});
+			$(tr_temp).find("span.fires_icon").click(function(){give_five_click($(this), 1);});
 			
 			$(tr_temp).find("td[align='center'][style]").html("Top "+ (i+1));
 			$(tr_temp).find("td.del_name").html("hwface");
@@ -401,9 +429,11 @@ withjQuery(function($)
 		}
 		else
 		{
-			$("table.ta_list").find("tr:not([sort])").first().before(read_more_str);
-			$("table.ta_list tr.list_2_tit td#more_text").text("更多榜单内容");
-			$("table.ta_list tr.list_2_tit").click(function(){
+			var temp_str = read_more_str;
+			temp_str = temp_str.replace(/#id#/g,'read_more');
+			$("table.ta_list").find("tr:not([sort])").first().before(temp_str);
+			$("td#read_more").text("更多榜单内容");
+			$("td#read_more").parent("tr").click(function(){
 				showSortPage(sort_page + 1, total_len);
 			});
 		}
@@ -515,6 +545,41 @@ withjQuery(function($)
 		save_conf(obj);
 	}
 	
+	function magic_page_load(msg, new_page)
+	{
+		$("td#magic_page").parent("tr").before($(msg).find("table.ta_list tr.list_bm"));
+		
+		current_page = new_page;
+		if (new_page >= max_page)
+		{
+			current_page = max_page;
+			$("td#magic_page").parent("tr").remove();
+		}
+	}
+	
+	function magic_page_click(new_page)
+	{
+		var cur_url = document.location.href;
+		var new_url = "";
+		
+		if (new_page > max_page)
+		{
+			$("td#magic_page").parent("tr").remove();
+			return;
+		}
+		
+		if (cur_url.indexOf("&p=") > 0)
+		{
+			new_url = cur_url.replace(/&p=[0-9]*/, '&p='+new_page);
+		}
+		else
+		{
+			new_url = cur_url + '&p='+new_page;
+		}
+		
+		$.ajax({ url:new_url, success: function(msg){magic_page_load(msg, new_page)}});
+	}
+	
 	//score board
 	$("input[value='发表新帖']").after(new_button_str);
 	$("input#local_sort").click(function(){local_sort($(this));});
@@ -527,7 +592,17 @@ withjQuery(function($)
 	$("span.pr20 a").each(function(){getPic($(this));});
 	$("td.del").click(function(){objToggle($(this))});
 	$("td.del").mouseout(function(){clearFiv($(this))});
-	$("span.fires_icon").mouseover(function(){giveFive($(this), 0);});
-	$("span.fires_icon").click(function(){giveFive($(this), 1);});
+	$("span.fires_icon").mouseover(function(){give_five_click($(this), 0);});
+	$("span.fires_icon").click(function(){give_five_click($(this), 1);});
+	
+	//magic page 
+	if (current_page < max_page)
+	{
+		var temp_str = read_more_str;
+		temp_str = temp_str.replace(/#id#/g,'magic_page');
+		$("table.ta_list").find("tr:not([sort])").last().after(temp_str);
+		$("td#magic_page").text("更多内容");
+		$("td#magic_page").parent("tr").click(function(){magic_page_click(current_page*1 + 1);});
+	}
 
 }, true);
