@@ -250,7 +250,7 @@ withjQuery(function($)
 	{
 		obj.parents("span.pr20 a").find("a#votemsg").html(msg);
 		obj.parents("span.pr20 a").find("a#votemsg").fadeTo("fast",1);
-		obj.parents("span.pr20 a").find("a#votemsg").fadeTo(3000,0);
+		obj.parents("span.pr20 a").find("a#votemsg").fadeTo(3000,0, function(){$(this).html("")});
 	}
 	
 	//入口$("td.del a[ajax] span.fires_icon")
