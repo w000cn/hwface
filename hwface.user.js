@@ -89,19 +89,19 @@ withjQuery(function($)
 {
 	var vote_url = "http://hwface.sinaapp.com/vote.php";	
 	var sort_url = "http://hwface.sinaapp.com/sort.php";
-	var giveFiveStr = "<span id='star' style='white-space: nowrap'><span class=\"fires_icon\" cent=1 lock=0 title=\"一般一般\" style=\"opacity: 0.4; \">&nbsp;</span>" +
+	var giveFiveStr = "<span id='star' style='white-space:nowrap;cursor:pointer;'><span class=\"fires_icon\" cent=1 lock=0 title=\"一般一般\" style=\"opacity: 0.4; \">&nbsp;</span>" +
 					"<span class=\"fires_icon\" cent=2 lock=0 title=\"可以可以\" style=\"opacity: 0.4; \">&nbsp;</span>" +
 					"<span class=\"fires_icon\" cent=3 lock=0 title=\"不错不错\" style=\"opacity: 0.4; \">&nbsp;</span>" +
 					"<span class=\"fires_icon\" cent=4 lock=0 title=\"来电咯\" style=\"opacity: 0.4; \">&nbsp;</span>" +
 					"<span class=\"fires_icon\" cent=5 lock=0 title=\"女神下凡\" style=\"opacity: 0.4; \">&nbsp;</span></span>" +
-					"<a id=\"votemsg\"></a><div id='content' style='display: none;'><div id='url'><a href='#url#'>#url#</a></div></div>";
+					"<a id=\"votemsg\"></a><div id='content' style='display: none;'><div id='url'><a href='#url#' target='_blank'>#url#</a></div></div>";
 	var new_button_str = "&nbsp;<input id='local_sort' class='text_button mt5' type='button' value='本地排行'>&nbsp;" +
 					"&nbsp;<input id='net_sort' class='text_button mt5' type='button' value='网络榜单'>&nbsp;" +
 					"&nbsp;<input id='find_smby' class='text_button mt5' type='button' value='可爱女人'>&nbsp;" +
 					"&nbsp;<input type='checkbox' id='auto_expand' name='conf'>自动展开&nbsp;"+
 					"&nbsp;<input type='checkbox' id='only_attach' name='conf'>只显示附件&nbsp;" +
 					"<div id='sort_msg' style='display: none;'></div>";
-	var read_more_str = "<tr class='list_2_tit'><td align='center' id='#id#'></td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>";
+	var read_more_str = "<tr class='list_2_tit'><td align='center' id='#id#' colspan=4>&nbsp;</td></tr>";
 					
 	var pic_hot = "http://xinsheng-image.huawei.com/cn/forumimage/data/uploads/2010/1213/22/4d0627ac71298.gif";
 	var pic_nor = "http://xinsheng-image.huawei.com/cn/forumimage/data/uploads/2010/1213/22/4d0627059851c.gif"
@@ -430,7 +430,7 @@ withjQuery(function($)
 			var temp_str = read_more_str;
 			temp_str = temp_str.replace(/#id#/g,'read_more');
 			$("table.ta_list").find("tr:not([sort])").first().before(temp_str);
-			$("td#read_more").text("更多榜单内容");
+			$("td#read_more").html("<a href='javascript:void(0);'>更多榜单内容</a>");
 			$("td#read_more").parent("tr").click(function(){
 				showSortPage(sort_page + 1, total_len);
 			});
@@ -605,7 +605,7 @@ withjQuery(function($)
 		var temp_str = read_more_str;
 		temp_str = temp_str.replace(/#id#/g,'magic_page');
 		$("table.ta_list").find("tr:not([sort])").last().after(temp_str);
-		$("td#magic_page").text("更多内容");
+		$("td#magic_page").html("<a href='javascript:void(0);'>更多内容</a>");
 		$("td#magic_page").parent("tr").click(function(){magic_page_click(current_page*1 + 1);});
 	}
 
