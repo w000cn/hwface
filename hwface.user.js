@@ -97,7 +97,7 @@ withjQuery(function($)
 					"<a id=\"votemsg\"></a><div id='content' style='display: none;'><div id='url'><a href='#url#' target='_blank'>#url#</a></div></div>";
 	var new_button_str = "&nbsp;<input id='local_sort' class='text_button mt5' type='button' value='本地排行'>&nbsp;" +
 					"&nbsp;<input id='net_sort' class='text_button mt5' type='button' value='网络榜单'>&nbsp;" +
-					"&nbsp;<input id='find_smby' class='text_button mt5' type='button' value='可爱女人'>&nbsp;" +
+					"&nbsp;<input id='lovely_girl' class='text_button mt5' type='button' value='可爱女人'>&nbsp;" +
 					"&nbsp;<input type='checkbox' id='auto_expand' name='conf'>自动展开&nbsp;"+
 					"&nbsp;<input type='checkbox' id='only_attach' name='conf'>只显示附件&nbsp;" +
 					"<div id='sort_msg' style='display: none;'></div>";
@@ -195,7 +195,7 @@ withjQuery(function($)
 	}
 	
 	//入口$("td.del")
-	function objToggle(obj)
+	function objToggle(obj, action)
 	{
 		var obja = obj.find("a[ajax]");
 		var url = obj.find("div#url").text();
@@ -205,7 +205,11 @@ withjQuery(function($)
 			//第一次点击的时候才会去请求数据，防止对服务器并发太多
 			$.ajax({ url:url, async:false, success: function(msg){getPicContent(obj, msg)}});
 		}
-		obj.find("div#content").slideToggle("slow");
+		
+		if (!action)
+		{
+			obj.find("div#content").slideToggle("slow");
+		}
 	}
 	
 	//入口$("span.pr20 a")
@@ -475,7 +479,7 @@ withjQuery(function($)
 	{
 		$("div#sort_msg").html(msg);
 		$("div#sort_msg").show();
-		$("div#sort_msg").fadeOut(3000);
+		$("div#sort_msg").fadeOut(10000);
 	}
 
 	function local_sort(obj)
@@ -512,9 +516,10 @@ withjQuery(function($)
 		});
 	}
 	
-	function find_smby(obj)
+	function lovely_girl(obj)
 	{
-		sort_msg("该功能暂时未开放");
+		createLovelyGirl();
+		sort_msg("如果你没有打开网络榜单，只能查看当前页面数据。你也可以通过页面底部“更多内容”来挑选更多妹子。后续将加入全局随机挑选，敬请关注。");
 	}
 	
 	//入口$("input[name='conf']")
@@ -587,26 +592,176 @@ withjQuery(function($)
 		$.ajax({ url:new_url, success: function(msg){magic_page_load(msg, new_page)}});
 	}
 	
-	//score board
-	$("input[value='发表新帖']").after(new_button_str);
-	$("input#local_sort").click(function(){local_sort($(this));});
-	$("input#net_sort").click(function(){net_sort($(this));});
-	$("input#find_smby").click(function(){find_smby($(this));});
-	$("input#auto_expand")[0].checked = getCookie("auto_expand")*1;
-	$("input#only_attach")[0].checked = getCookie("only_attach")*1;
-	$("input#auto_expand").change(function(){auto_expand_click($(this));});
-	$("input#only_attach").change(function(){only_attach_click($(this));});
-	//
-	createHWfaceInfo($("table.ta_list tr.list_bm"));
-	
-	//magic page 
-	if (current_page < max_page)
+	function lovely_girl_click(obj)
 	{
-		var temp_str = read_more_str;
-		temp_str = temp_str.replace(/#id#/g,'magic_page');
-		$("table.ta_list").find("tr:not([sort])").last().after(temp_str);
-		$("td#magic_page").html("<a href='javascript:void(0);'>更多内容</a>");
-		$("td#magic_page").parent("tr").click(function(){magic_page_click(current_page*1 + 1);});
-	}
+		var i = 0;
+		var curr_index = 0;
+		var data_str = 0;
+		//投票
+		var curr_uid = obj.attr("uid");
+		i = ($("td#lovely_girl img:eq(0)").attr("uid") == curr_uid)?0:1;
+		var other_str = "td#lovely_girl img:eq("+((i+1)%2)+")";
+		
+		var data_str = "uid[]="+ curr_uid + "&img[]=" + $("td#lovely_girl img:eq(0)").attr("src") + "&" +
+						"uid[]="+ $(other_str).attr("uid") + "&img[]=" + $(other_str).attr("src") ;
 
+		$.ajax({
+			url: vote_url,
+			data: data_str,
+			type: "POST",
+			dataType:"jsonp",
+			jsonp:"callback",
+			jsonpCallback:"success_jsonpCallback",
+			success: function(msg)
+			{
+			
+			},
+			error: function(msg)
+			{
+				sort_msg( "暂时无法连接投票服务器");
+			}
+		});
+		
+		//投票完毕，更新数据
+		createLovelyGirl();
+	}
+	
+	//入口：img的contenter
+	function resize_imgs_in_obj(obj)
+	{
+		var i = 0;
+		var obj_width = $("td#lovely_girl").width();
+		var pic_width = obj_width * 0.9/2;
+		
+		obj.find("img").each(function()
+		{
+			//resize_img($(this), pic_width);
+			//$(this).ready(function(){ resize_img($(this), pic_width); });
+			$(this).width(pic_width);
+			$(this).removeAttr("onclick");
+			$(this).css("cursor", "pointer");
+			$(this).click(function(){lovely_girl_click($(this));});
+		});
+	}
+	
+	function get_img_from_a(obj, uid)
+	{
+		var img_obj = obj.find("div#content div.dow_list img[data-ks-lazyload]:eq(0)");
+		//如果没有该uid的数据，那么把数据get出来
+		//暂时没有显示
+		if (obj.length <= 0)
+		{
+			var temp_url = "http://xinsheng.huawei.com/cn/index.php?app=forum&mod=Detail&act=index&id=" + uid;
+			$.ajax({ url:temp_url, async:false, success: function(msg){
+				img_obj = $(msg).find("div.dow_list img[data-ks-lazyload]:eq(0)");
+				img_obj.attr("src", img_obj.attr("data-ks-lazyload"));
+			}});
+			
+		}
+		//显示出来，图片还没有展开
+		else if (img_obj.length <= 0)
+		{
+			objToggle(obj.parents("td.del"), 1);
+			img_obj = obj.find("div#content div.dow_list img[data-ks-lazyload]:eq(0)");
+		}
+		
+		img_obj.attr("uid", uid);
+		
+		return img_obj[0].outerHTML;
+	}
+	
+	function get_radom_pic(uid)
+	{
+		var d=new Date();
+		var time_tick = d.getTime();
+		var curr_uid = 0;
+		var pic_index = 0;
+		//如果已经有网络排行的数据，则优先使用网络排行的数据
+		if (network_sort_flag == 1)
+		{
+			do
+			{
+				pic_index = time_tick % sort_obj.length;
+				curr_uid = sort_obj[pic_index]["uid"];
+			}
+			while(uid && curr_uid == uid);
+		}
+		//TODO 到服务器查询两个随机uid进行比较
+		//本地当前页面随机选择两个
+		else 
+		{
+			do
+			{
+				pic_index = time_tick % $("td.del span.pr20 a[uid]").length;
+				curr_uid = $("td.del span.pr20 a[uid]:eq("+pic_index+")").attr("uid");
+			}
+			while(uid && curr_uid == uid);
+		}
+		//obj.parents("span.pr20 a").find("div#content a[title='点击下载']").length
+		var uid_tempa = $("td.del span.pr20 a[uid="+curr_uid+"]");
+		return get_img_from_a(uid_tempa, curr_uid);
+	}
+	
+	function get_pic_for_lovely_girl(uid)
+	{
+		var img_str1 = "<img data-ks-lazyload='http://xinsheng-image.huawei.com/cn/forumimage/showimage-1453351-677a0379aba0fc71c66db58215c20049-thumb.jpg' onclick=\"tb_show('', 'http://xinsheng-image.huawei.com/cn/forumimage/showimage-1453351-677a0379aba0fc71c66db58215c20049-self.jpg', false);\" src=\"http://xinsheng-image.huawei.com/cn/forumimage/showimage-1453351-677a0379aba0fc71c66db58215c20049-thumb.jpg\">";
+		var img_str2 = "<img data-ks-lazyload=\"http://xinsheng-image.huawei.com/cn/forumimage/showimage-1450479-71502fb101cdbe25a72e35b767fa5978-thumb.jpg\" onclick=\"tb_show('', 'http://xinsheng-image.huawei.com/cn/forumimage/showimage-1450479-71502fb101cdbe25a72e35b767fa5978-self.jpg', false);\" src=\"http://xinsheng-image.huawei.com/cn/forumimage/showimage-1450479-71502fb101cdbe25a72e35b767fa5978-thumb.jpg\">";
+		var img_str1 = get_radom_pic();
+		var img_str2 = get_radom_pic($(img_str1).attr("uid"));
+		$("td#lovely_girl div:eq(0)").html(img_str1);
+		$("td#lovely_girl div:eq(1)").html(img_str2);
+		resize_imgs_in_obj($("td#lovely_girl"));
+	}
+	
+	function createControlBoard()
+	{
+		//ControlBoard
+		$("input[value='发表新帖']").after(new_button_str);
+		$("input#local_sort").click(function(){local_sort($(this));});
+		$("input#net_sort").click(function(){net_sort($(this));});
+		$("input#lovely_girl").click(function(){lovely_girl($(this));});
+		$("input#auto_expand")[0].checked = getCookie("auto_expand")*1;
+		$("input#only_attach")[0].checked = getCookie("only_attach")*1;
+		$("input#auto_expand").change(function(){auto_expand_click($(this));});
+		$("input#only_attach").change(function(){only_attach_click($(this));});
+	}
+	
+	function createMagicPage()
+	{
+		//magic page 
+		if (current_page < max_page)
+		{
+			var temp_str = read_more_str;
+			temp_str = temp_str.replace(/#id#/g,'magic_page');
+			$("table.ta_list").find("tr:not([sort])").last().after(temp_str);
+			$("td#magic_page").html("<a href='javascript:void(0);'>更多内容</a>");
+			$("td#magic_page").parent("tr").click(function(){magic_page_click(current_page*1 + 1);});
+		}
+	}
+	
+	function createLovelyGirl()
+	{
+		if ($("td#lovely_girl").length <= 0)
+		{
+			//lovely girl
+			var temp_str = read_more_str;
+			temp_str = temp_str.replace(/#id#/g,'lovely_girl_title');
+			$("div.ta_list:not(.bbs_list) table").has("tr:eq(3)").append(temp_str);
+			$("td#lovely_girl_title").html("选择你的“可爱女人” / <a style='cursor:pointer;'>可是，我没有找到诶？</a>");
+			$("td#lovely_girl_title a").click(function(){createLovelyGirl();});
+			//创建LovelyGirl界面
+			temp_str = read_more_str;
+			temp_str = temp_str.replace(/#id#/g,'lovely_girl');
+			$("div.ta_list:not(.bbs_list) table").has("tr:eq(3)").append(temp_str);
+			$("td#lovely_girl").parent("tr").removeClass("list_2_tit");
+			$("td#lovely_girl").html("<div height='100px' class='floorBox_left' style='width:49%'>test</div><div height='100px' class='floorBox_right' style='width:49%'>test</div>");
+		}
+		get_pic_for_lovely_girl();
+	}
+	
+	createControlBoard();
+	createHWfaceInfo($("table.ta_list tr.list_bm"));
+	createMagicPage();
+	//createLovelyGirl();
+	
 }, true);
