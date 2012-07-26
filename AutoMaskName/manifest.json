@@ -1,0 +1,15 @@
+{
+   "content_scripts": [ {
+      "exclude_globs": [  ],
+      "exclude_matches": [  ],
+      "include_globs": [ "*://xinsheng.huawei.com/cn/index.php\\?app=forum&mod=Detail&act=index*" ],
+      "js": [ "automaskname.user.js" ],
+      "matches": [ "http://*/*", "https://*/*" ],
+      "run_at": "document_idle"
+   } ],
+   "converted_from_user_script": true,
+   "description": "A javascript snippet to help you auto change mask name",
+   "key": "YVGl6bznVum2TPG2NGi1dqD5Wdk09UF7sQ94MYlYldM=",
+   "name": "Auto Mask Name",
+   "version": "1.0"
+}
