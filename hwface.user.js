@@ -414,7 +414,8 @@ withjQuery(function ($) {
 		network_sort_flag = 0,
 		current_page = $("div.page.R span.current").first().text(),
 		max_page = getMaxPageNum(),
-		sort_obj = [];
+		sort_obj = [],
+		voted_obj = [];
 
 	function setCookie(c_name, value, expiredays) {
 		var exdate = new Date();
@@ -456,7 +457,7 @@ withjQuery(function ($) {
 			a_url = $(objs[i]).attr("href");
 			//<a href=​"/​cn/​index.php?app=forum&mod=List&act=index&class=468&cate=64&p=5">​5​</a>​
 			match = a_url && a_url.match(/&p=([0-9]*)/i);
-			temp_page = match && match[1];
+			temp_page = match && match[1]*1;
 			curr_max_page = (temp_page > curr_max_page) ? temp_page : curr_max_page;
 		}
 		return curr_max_page;
@@ -816,14 +817,15 @@ withjQuery(function ($) {
 	}
 
 	function lovely_girl_click(obj) {
-		var i = 0, curr_index = 0, curr_uid, other_str, data_str;
+		var i = 0, curr_index = 0, curr_uid, other_uid, other_str, data_str;
 		//投票
-		curr_uid = obj.attr("uid");
+		curr_uid = obj.attr("uid") * 1;
 		i = ($("td#lovely_girl img:eq(0)").attr("uid") == curr_uid) ? 0 : 1;
 		other_str = "td#lovely_girl img:eq(" + ((i + 1) % 2) + ")";
+		other_uid = $(other_str).attr("uid") * 1;
 
 		data_str = "uid[]=" + curr_uid + "&img[]=" + $("td#lovely_girl img:eq(0)").attr("src") + "&" +
-						"uid[]=" + $(other_str).attr("uid") + "&img[]=" + $(other_str).attr("src");
+						"uid[]=" + other_uid + "&img[]=" + $(other_str).attr("src");
 
 		$.ajax({
 			url: vote_url,
@@ -840,6 +842,8 @@ withjQuery(function ($) {
 			}
 		});
 
+		voted_obj[voted_obj.length] = curr_uid;
+		voted_obj[voted_obj.length] = other_uid;
 		//投票完毕，更新数据
 		createLovelyGirl();
 	}
@@ -880,9 +884,17 @@ withjQuery(function ($) {
 		return img_obj[0] && img_obj[0].outerHTML;
 	}
 
+	function check_repeat_uid(uid) {
+		var i = 0, curr = 0, len = voted_obj.length;
+		for (i = 0; i < len; i++) {
+			if (voted_obj[i] - uid === 0) {return true; }
+		}
+		return false;
+	}
+
 	function get_radom_pic(uid) {
 		var uid_tempa, temp_pic, d, time_tick,
-			curr_uid = 0, pic_index = 0, sort_index = 0, total_count = 0;
+			curr_uid = 0, pic_index = 0, sort_index = 0, total_count = 0, repeat_time = 0;
 
 		//TODO 到服务器查询两个随机uid进行比较
 		for (;;) {
@@ -899,7 +911,11 @@ withjQuery(function ($) {
 				curr_uid = sort_obj[sort_index].uid;
 			}
 
-			if (uid && curr_uid == uid) {
+			if (uid && curr_uid == uid) {continue; }
+
+			if (check_repeat_uid(curr_uid, total_count)) {
+				repeat_time++;
+				if (repeat_time > 10) {break; }
 				continue;
 			}
 
@@ -907,9 +923,15 @@ withjQuery(function ($) {
 			uid_tempa = $("td.del span.pr20 a[uid=" + curr_uid + "]");
 			temp_pic = get_img_from_a(uid_tempa, curr_uid);
 			//某些帖子没有img附件，只有doc附件、rar附件，要换个帖子再打开
-			if (temp_pic) {
-				break;
-			}
+			if (temp_pic) {break; }
+			repeat_time++;
+			if (repeat_time > 10) {break; }
+		}
+		if (repeat_time > 5) {
+			magic_page_click(current_page * 1 + 1);
+		} else if (repeat_time > 10) {
+			alert("没有足够多的妹子了，你可以混下深圳的征婚版块! ");
+			voted_obj = [];
 		}
 
 		return temp_pic;
