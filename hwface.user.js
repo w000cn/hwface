@@ -392,6 +392,8 @@ withjQuery(function ($) {
 
 	var vote_url = "http://hwface.sinaapp.com/vote.php",
 		sort_url = "http://hwface.sinaapp.com/sort.php",
+		rand_url = "http://hwface.sinaapp.com/rand.php",
+		img_template = "<img data-ks-lazyload='#url#' src='#url#' uid='894507'>",
 		giveFiveStr = "<span id='star' style='white-space:nowrap;cursor:pointer;'><span class=\"fires_icon\" cent=1 lock=0 title=\"一般一般\" style=\"opacity: 0.4; \">&nbsp;</span>" +
 					"<span class=\"fires_icon\" cent=2 lock=0 title=\"可以可以\" style=\"opacity: 0.4; \">&nbsp;</span>" +
 					"<span class=\"fires_icon\" cent=3 lock=0 title=\"不错不错\" style=\"opacity: 0.4; \">&nbsp;</span>" +
@@ -412,10 +414,12 @@ withjQuery(function ($) {
 		sort_page = 0,
 		num_per_page = 20,
 		network_sort_flag = 0,
+		rand_server_error = 0,
 		current_page = $("div.page.R span.current").first().text(),
 		max_page = getMaxPageNum(),
 		sort_obj = [],
-		voted_obj = [];
+		voted_obj = [],
+		rand_pic = [];
 
 	function setCookie(c_name, value, expiredays) {
 		var exdate = new Date();
@@ -457,7 +461,7 @@ withjQuery(function ($) {
 			a_url = $(objs[i]).attr("href");
 			//<a href=​"/​cn/​index.php?app=forum&mod=List&act=index&class=468&cate=64&p=5">​5​</a>​
 			match = a_url && a_url.match(/&p=([0-9]*)/i);
-			temp_page = match && match[1]*1;
+			temp_page = match && match[1] * 1;
 			curr_max_page = (temp_page > curr_max_page) ? temp_page : curr_max_page;
 		}
 		return curr_max_page;
@@ -556,8 +560,8 @@ withjQuery(function ($) {
 
 	//入口$("td.del a[ajax] span.fires_icon")
 	function vote_to_server(obj) {
-		var obja, temp_obj, str = "cent=" + obj.attr("cent") + "&uid=",
-			url = obj.parents("span.pr20 a").find("div#url").text(),
+		var obja, temp_obj, d, time_tick, str = "cent=" + obj.attr("cent") + "&uid=",
+			//url = obj.parents("span.pr20 a").find("div#url").text(),
 			newToken = obj.parents("span.pr20 a").attr("uid");
 
 		if (newToken) {
@@ -569,6 +573,8 @@ withjQuery(function ($) {
 				});
 			}
 
+			d = new Date();
+			time_tick = d.getTime();
 			temp_obj = obj.parents("span.pr20 a").find("span.fires_icon[cent=5]");
 			$.ajax({
 				url: vote_url,
@@ -577,7 +583,7 @@ withjQuery(function ($) {
 				type: "POST",
 				dataType: "jsonp",
 				jsonp: "callback",
-				jsonpCallback: "success_jsonpCallback",
+				jsonpCallback: "vote_" + time_tick,
 				success: function (msg) {
 					if (msg.new_cent) {
 						vote_msg(temp_obj, "感谢投票,目前平均分:" + msg.new_cent + ".");
@@ -732,18 +738,21 @@ withjQuery(function ($) {
 	}
 
 	function net_sort(obj) {
+		var d, time_tick;
 		//sort_msg("网络榜单功能暂时未开放");	
 		if ($("table.ta_list").find("tr[sort]").length
 				&& $("table.ta_list").find("tr[sort]").attr("sort") == "net") {
 			window.open("#star", "_self");
 			return;
 		}
+		d = new Date();
+		time_tick = d.getTime();
 		$.ajax({
 			url: sort_url,
 			type: "POST",
 			dataType: "jsonp",
 			jsonp: "callback",
-			jsonpCallback: "success_jsonpCallback",
+			jsonpCallback: "sort_" + time_tick,
 			success: function (msg) {
 				network_sort_flag = 1;
 				obj_sort_func(msg);
@@ -787,7 +796,7 @@ withjQuery(function ($) {
 	}
 
 	function magic_page_load(msg, new_page) {
-		var i = 0, magic_obj = $(msg).find("table.ta_list tr.list_bm");
+		var magic_obj = $(msg).find("table.ta_list tr.list_bm");
 
 		createHWfaceInfo($(magic_obj));
 		$("td#magic_page").parent("tr").before($(magic_obj));
@@ -817,7 +826,7 @@ withjQuery(function ($) {
 	}
 
 	function lovely_girl_click(obj) {
-		var i = 0, curr_index = 0, curr_uid, other_uid, other_str, data_str;
+		var i = 0, curr_uid, other_uid, other_str, data_str, d, time_tick;
 		//投票
 		curr_uid = obj.attr("uid") * 1;
 		i = ($("td#lovely_girl img:eq(0)").attr("uid") == curr_uid) ? 0 : 1;
@@ -827,13 +836,15 @@ withjQuery(function ($) {
 		data_str = "uid[]=" + curr_uid + "&img[]=" + $("td#lovely_girl img:eq(0)").attr("src") + "&" +
 						"uid[]=" + other_uid + "&img[]=" + $(other_str).attr("src");
 
+		d = new Date();
+		time_tick = d.getTime();
 		$.ajax({
 			url: vote_url,
 			data: data_str,
 			type: "POST",
 			dataType: "jsonp",
 			jsonp: "callback",
-			jsonpCallback: "success_jsonpCallback",
+			jsonpCallback: "vote_pk_" + time_tick,
 			success: function (msg) {
 
 			},
@@ -850,8 +861,7 @@ withjQuery(function ($) {
 
 	//入口：img的contenter
 	function resize_imgs_in_obj(obj) {
-		var i = 0,
-			obj_width = $("td#lovely_girl").width(),
+		var obj_width = $("td#lovely_girl").width(),
 			pic_width = obj_width * 0.9 / 2;
 
 		obj.find("img").each(function () {
@@ -865,39 +875,62 @@ withjQuery(function ($) {
 	}
 
 	function get_img_from_a(obj, uid) {
-		var temp_url, img_obj = obj.find("div#content div.dow_list img[data-ks-lazyload]:eq(0)");
+		var temp_url, img_obj = obj.find("div#content div.dow_list img[data-ks-lazyload]");
 		//如果没有该uid的数据，那么把数据get出来
 		//暂时没有显示
 		if (obj.length <= 0) {
 			temp_url = "http://xinsheng.huawei.com/cn/index.php?app=forum&mod=Detail&act=index&id=" + uid;
 			$.ajax({ url: temp_url, async: false, success: function (msg) {
-				img_obj = $(msg).find("div.dow_list img[data-ks-lazyload]:eq(0)");
-				img_obj.attr("src", img_obj.attr("data-ks-lazyload"));
+				img_obj = $(msg).find("div.dow_list img[data-ks-lazyload]");
+				img_obj.each(function () {
+					$(this).attr("src", $(this).attr("data-ks-lazyload"));
+				});
 			}});
 		} else if (img_obj.length <= 0) { //显示出来，图片还没有展开
 			objToggle(obj.parents("td.del"), 1);
-			img_obj = obj.find("div#content div.dow_list img[data-ks-lazyload]:eq(0)");
+			img_obj = obj.find("div#content div.dow_list img[data-ks-lazyload]");
 		}
 
-		img_obj.attr("uid", uid);
+		img_obj.each(function () {
+			$(this).attr("uid", uid);
+		});
 
-		return img_obj[0] && img_obj[0].outerHTML;
+		return img_obj;//[0] && img_obj[0].outerHTML;
 	}
 
 	function check_repeat_uid(uid) {
-		var i = 0, curr = 0, len = voted_obj.length;
+		var i = 0, len = voted_obj.length;
 		for (i = 0; i < len; i++) {
 			if (voted_obj[i] - uid === 0) {return true; }
 		}
 		return false;
 	}
 
+	function get_pic_from_rand_data() {
+		if (rand_pic && rand_pic.length) {
+			var img_str = img_template.replace(/#url#/g, rand_pic[0].img);
+			img_str = $(img_str).attr("uid", rand_pic[0].uid);
+			rand_pic.splice(0, 1);
+			return img_str;
+		}
+	}
+
 	function get_radom_pic(uid) {
 		var uid_tempa, temp_pic, d, time_tick,
 			curr_uid = 0, pic_index = 0, sort_index = 0, total_count = 0, repeat_time = 0;
 
-		//TODO 到服务器查询两个随机uid进行比较
 		for (;;) {
+			//到服务器查询两个随机uid进行比较
+			if (rand_server_error == 0 && rand_pic.length > 0) {
+				temp_pic = get_pic_from_rand_data();
+				if (temp_pic) {
+					uid = $(temp_pic).attr("uid");
+					if (uid && curr_uid == uid) {continue; }
+					if (check_repeat_uid(curr_uid)) {continue; }
+					break;
+				}
+			}
+
 			d = new Date();
 			time_tick = d.getTime();
 			total_count = $("td.del span.pr20 a[uid]").length + sort_obj.length;
@@ -913,7 +946,7 @@ withjQuery(function ($) {
 
 			if (uid && curr_uid == uid) {continue; }
 
-			if (check_repeat_uid(curr_uid, total_count)) {
+			if (check_repeat_uid(curr_uid)) {
 				repeat_time++;
 				if (repeat_time > 10) {break; }
 				continue;
@@ -923,7 +956,7 @@ withjQuery(function ($) {
 			uid_tempa = $("td.del span.pr20 a[uid=" + curr_uid + "]");
 			temp_pic = get_img_from_a(uid_tempa, curr_uid);
 			//某些帖子没有img附件，只有doc附件、rar附件，要换个帖子再打开
-			if (temp_pic) {break; }
+			if (temp_pic && temp_pic.length) {break; }
 			repeat_time++;
 			if (repeat_time > 10) {break; }
 		}
@@ -931,15 +964,49 @@ withjQuery(function ($) {
 			magic_page_click(current_page * 1 + 1);
 		} else if (repeat_time > 10) {
 			alert("没有足够多的妹子了，你可以混下深圳的征婚版块! ");
+			voted_obj.splice(0, voted_obj.length);
 			voted_obj = [];
 		}
 
-		return temp_pic;
+		if ($(temp_pic).attr("src").indexOf("success") >= 0  || $(temp_pic).attr("src").indexOf("vote") >= 0) {
+			alert(1);
+		}
+		return temp_pic && temp_pic.length && temp_pic[0].outerHTML;
 	}
 
-	function get_pic_for_lovely_girl(uid) {
-		//var img_str1 = "<img data-ks-lazyload='http://xinsheng-image.huawei.com/cn/forumimage/showimage-1453351-677a0379aba0fc71c66db58215c20049-thumb.jpg' onclick=\"tb_show('', 'http://xinsheng-image.huawei.com/cn/forumimage/showimage-1453351-677a0379aba0fc71c66db58215c20049-self.jpg', false);\" src=\"http://xinsheng-image.huawei.com/cn/forumimage/showimage-1453351-677a0379aba0fc71c66db58215c20049-thumb.jpg\">",
-		//var img_str2 = "<img data-ks-lazyload=\"http://xinsheng-image.huawei.com/cn/forumimage/showimage-1450479-71502fb101cdbe25a72e35b767fa5978-thumb.jpg\" onclick=\"tb_show('', 'http://xinsheng-image.huawei.com/cn/forumimage/showimage-1450479-71502fb101cdbe25a72e35b767fa5978-self.jpg', false);\" src=\"http://xinsheng-image.huawei.com/cn/forumimage/showimage-1450479-71502fb101cdbe25a72e35b767fa5978-thumb.jpg\">",
+	function refresh_rand_data(msg) {
+		var uid = 0, j = 0;
+
+		for (uid in msg) {
+			for (j = 0; rand_pic && rand_pic.length && j < rand_pic.length; j++) {
+				if (uid == rand_pic[j].uid) {continue; }
+			}
+			rand_pic[j] = [];
+			rand_pic[j].uid = uid;
+			rand_pic[j].img = msg[uid];
+		}
+	}
+
+	function get_rand_pic_from_server() {
+		var d, time_tick;
+		if (rand_server_error > 10 || rand_pic.length >= 6) {
+			return;
+		}
+		d = new Date();
+		time_tick = d.getTime();
+		$.ajax({url: rand_url, dataType: "jsonp", jsonp: "callback", jsonpCallback: "rand_pic_" + time_tick,
+			success: function (msg) {
+				rand_server_error = 0;
+				refresh_rand_data(msg);
+			},
+			error: function (msg) {
+				rand_server_error++;
+			}
+		});
+	}
+
+	function get_pic_for_lovely_girl() {
+		get_rand_pic_from_server();
 		var	img_str1 = get_radom_pic(),
 			img_str2 = get_radom_pic($(img_str1).attr("uid"));
 		$("td#lovely_girl div:eq(0)").html(img_str1);
