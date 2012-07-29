@@ -967,10 +967,6 @@ withjQuery(function ($) {
 			voted_obj.splice(0, voted_obj.length);
 			voted_obj = [];
 		}
-
-		if ($(temp_pic).attr("src").indexOf("success") >= 0  || $(temp_pic).attr("src").indexOf("vote") >= 0) {
-			alert(1);
-		}
 		return temp_pic && temp_pic.length && temp_pic[0].outerHTML;
 	}
 
